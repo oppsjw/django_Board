@@ -15,9 +15,13 @@ urlpatterns = [
     path('article/detail/<int:id>/', views.detail),
     path('article/update/<int:id>/', views.update),
     path('article/delete/<int:id>/', views.delete),
+    
     path('map/', views.map),
     path('map_data/', views.map_data),
+    
     path('contact/', views.contact),
+    
+    path('upload/', views.upload),
     
     path('test/', views.test),
 ]

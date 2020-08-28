@@ -186,3 +186,29 @@ def send_mail(from_email, to_email, msg):
     msg['To'] = from_email # 수신 이메일
     smtp.sendmail(from_email, from_email, msg.as_string())
     smtp.quit()
+
+import time
+def get_now():
+    now = time.time()
+    return now
+def upload(request):
+    if request.method == "POST":
+        upload_file = request.FILES['upload_file']
+        # 파일 저장
+        # file = open('','')
+        # file.write('내용')
+        file_name = upload_file.name # "article/static/다운로드.png"
+
+        idx = file_name.find(".")
+        file1 = file_name[0:idx] # 파일명
+        file2 = file_name[idx:] # 확장자
+
+        sep = time.time() #unix time (단위 : ms)
+        file_name = file1 + str(sep) + file2
+
+        with open('article/static/'+file_name, 'wb') as file:
+            for chunk in upload_file.chunks():
+                file.write(chunk)
+
+        return HttpResponse(upload_file.name)
+    return render(request, 'upload.html')
