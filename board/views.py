@@ -127,3 +127,62 @@ def test(request):
     for i in range(100):
         Article(title='제목-%s' % i, content='', user = u).save()
     return HttpResponse('Ok~!')
+
+def map(request):
+    return render(request, 'map.html')
+
+
+from django.http import JsonResponse # JSON 응답
+from map.models import Point
+from django.forms.models import model_to_dict
+def map_data(request):
+    data = Point.objects.all()
+    lat = request.GET.get('lat')
+    lng = request.GET.get('lng')
+    map_list = []
+    for d in data:
+        d = model_to_dict(d) # QuerySet -> Dict
+        dist = distance(float(lat), float(lng), d['lat'], d['lng'])
+        if(dist <= 10): # 10km 이내의 장소만 응답결과로 저장
+            map_list.append(d)
+    # dict가 아닌 자료는 항상 safe=False 옵션 사용
+    return JsonResponse(map_list, safe=False)
+
+
+import math
+def distance(lat1, lng1, lat2, lng2) :
+    theta = lng1 - lng2
+    dist1 = math.sin(deg2rad(lat1)) * math.sin(deg2rad(lat2))
+    dist2 = math.cos(deg2rad(lat1)) * math.cos(deg2rad(lat2))
+    dist2 = dist2* math.cos(deg2rad(theta))
+    dist = dist1 + dist2
+    dist = math.acos(dist)
+    dist = rad2deg(dist) * 60 * 1.1515 * 1.609344
+    return dist
+def deg2rad(deg):
+    return deg * math.pi / 180.0
+def rad2deg(rad):
+    return rad * 180.0 / math.pi
+
+
+import smtplib
+from email.mime.text import MIMEText
+
+def contact(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        comment = request.POST.get('comment')
+        # 발신자주소, 수신자주소, 메시지
+        send_mail('구글계정이메일', email, comment)
+        return render(request, 'contact_success.html')
+    return render(request, 'contact.html')
+
+
+def send_mail(from_email, to_email, msg):
+    smtp = smtplib.SMTP_SSL('smtp.gmail.com', 465) # SMTP 설정
+    smtp.login(from_email, '앱비밀번호16자리') # 인증정보 설정
+    msg = MIMEText(msg)
+    msg['Subject'] = '[문의사항]' + to_email # 제목
+    msg['To'] = from_email # 수신 이메일
+    smtp.sendmail(from_email, from_email, msg.as_string())
+    smtp.quit()
